@@ -1,0 +1,38 @@
+📝 Feature Proposal: 
+
+1. 自动修复 Webflow 字段类型不匹配
+
+        功能目标：
+        当本地 Notion schema 和 Webflow 中已有字段的类型不一致时，自动执行字段的类型修复操作。
+
+        触发条件：
+
+        本地 schema 中存在字段 A（如 "Post Author"），类型为 "PlainText"
+
+        Webflow 中已存在字段 A，但类型为 "Option" 或其他不一致类型
+
+        当前行为：
+
+        输出警告：⚠️ Field exists but type mismatch
+
+        跳过不处理
+
+        预期增强行为（未来）：
+
+        自动删除 Webflow 中类型不一致的字段（⚠️ 需确保该字段未被使用）
+
+        使用正确类型重新创建同名字段
+
+        或记录冲突字段到一个 override list，提示用户手动决策
+
+        潜在风险：
+
+        删除字段会导致原有内容永久丢失（Webflow 没有回收站）
+
+        若字段用于某些组件或页面，可能导致结构失效
+
+        实施建议：
+
+        添加 --force-recreate-mismatch 选项
+
+        创建 mismatch_log.json，记录冲突字段及其原始类型，用于版本控制与回滚参考
