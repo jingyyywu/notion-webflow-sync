@@ -1,7 +1,17 @@
 import datetime
+import httpx
 import json
 from pathlib import Path
-from webflow_utils import create_webflow_item, get_webflow_fields, create_webflow_field, update_webflow_item
+from webflow_utils import (
+    create_webflow_item,
+    get_webflow_fields,
+    create_webflow_field,
+    update_webflow_item,
+    delete_webflow_item,
+    fetch_webflow_item,
+    patch_field_to_remove_reference,
+)
+
 from main import NOTION_TO_WEBFLOW_LOOKUP
 
 def normalize_notion_id(id_str: str) -> str:
@@ -185,5 +195,42 @@ def sync_items_to_webflow(create_list, update_list, delete_list, mapping, schema
 
         if success:
             mapping[notion_id]["lastSyncedAt"] = now
+
+    
+    for item in delete_list:
+        notion_id = item["notionID"]
+        webflow_id = item["webflowID"]
+
+        print(f"🗑️ Deleting item: Notion ID = {notion_id} → Webflow ID = {webflow_id}")
+        success = delete_webflow_item(webflow_id, collection_id, headers)
+        if not success:
+            try:
+                import json
+                r = httpx.delete(f"https://api.webflow.com/v2/collections/{collection_id}/items/{webflow_id}", headers=headers, timeout=30.0)
+                if r.status_code == 409:
+                    error_json = r.json()
+                    conflicts = error_json["details"][0].get("conflicts", [])
+                    for c in conflicts:
+                        ref = c.get("ref", {})
+                        ref_id = ref.get("id")
+                        ref_col = ref.get("collectionId")
+                        ref_name = ref.get("name")
+                        print(f"🔗 Removing reference in: {ref_name} ({ref_id}) in collection {ref_col}")
+                        # brute force: try all fields
+                        ref_item = fetch_webflow_item(ref_id, ref_col, headers)
+                        if ref_item:
+                            for slug, value in ref_item.get("fieldData", {}).items():
+                                if isinstance(value, list) and webflow_id in value:
+                                    patch_field_to_remove_reference(ref_id, ref_col, slug, webflow_id, headers)
+                                elif isinstance(value, str) and value == webflow_id:
+                                    patch_field_to_remove_reference(ref_id, ref_col, slug, webflow_id, headers)
+                    # retry delete
+                    success = delete_webflow_item(webflow_id, collection_id, headers)
+            except Exception as e:
+                print(f"❌ Force delete error: {e}")
+
+        if success and notion_id in mapping:
+            del mapping[notion_id]
+
 
     return mapping

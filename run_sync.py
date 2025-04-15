@@ -85,5 +85,29 @@ def run_full_sync():
 
         save_mapping(key, mapping)
 
+
+    # Phase 4: handle delete
+    for key, ids in DATABASE_MAPPING.items():
+        print(f"\n❌ Phase 4 - Deleting items for: {key}")
+        webflow_collection_id = ids["webflow_collection_id"]
+
+        mapping = mapping_dict[key]
+        delete_list = delete_dict[key]
+
+        mapping = sync_items_to_webflow(
+            all_mappings=mapping_dict,
+            create_list=[],
+            update_list=[],
+            delete_list=delete_list,
+            mapping=mapping,
+            schema=schema_dict[key],
+            collection_id=webflow_collection_id,
+            headers=WEBFLOW_HEADERS,
+            slug_map=slug_map_dict[key]
+        )
+
+        save_mapping(key, mapping)
+
+
 if __name__ == "__main__":
     run_full_sync()
