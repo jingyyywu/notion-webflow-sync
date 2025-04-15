@@ -157,35 +157,10 @@ def sync_items_to_webflow(create_list, update_list, delete_list, mapping, schema
             elif notion_type == "relation":
                 val = item["properties"].get(field_name, {}).get("relation", [])
                 target_ids = [v["id"] for v in val]
+            print(f"🔄 Updating relation field '{field_name}' for item '{notion_id}'")
+            print(f"   Target collection: {spec.get('target', 'Unknown')}\n   Target IDs: {target_ids}")
                 wf_ids = []
-                for tid in target_ids:
-                    found = False
-                    if tid in mapping and "webflowID" in mapping[tid]:
-                        wf_ids.append(mapping[tid]["webflowID"])
-                        print(f"   ✅ Target ID {tid} exists in mapping with Webflow ID {mapping[tid]['webflowID']}")
-                        found = True
-                    elif all_mappings:
-                        for k, other_map in all_mappings.items():
-                            if tid in other_map and "webflowID" in other_map[tid]:
-                                wf_ids.append(other_map[tid]["webflowID"])
-                                print(f"   ✅ Target ID {tid} found in mapping[{k}] with Webflow ID {other_map[tid]['webflowID']}")
-                                found = True
-                                break
-                    if not found:
-                        print(f"   ❌ Target ID {tid} does not exist in any mapping")
-                if wf_ids:
-                    field_data[slug] = wf_ids if len(wf_ids) > 1 else wf_ids[0]
-
-                # Debugging messages for relation fields
-                print(f"🔄 Updating relation field '{field_name}' for item '{notion_id}'")
-                print(f"   Target collection: {spec.get('target', 'Unknown')}")
-                print(f"   Target IDs: {target_ids}")
-                print(f"   Webflow IDs: {wf_ids}")
-                for tid in target_ids:
-                    if tid in mapping:
-                        print(f"   ✅ Target ID {tid} exists in mapping with Webflow ID {mapping[tid]['webflowID']}")
-                    else:
-                        print(f"   ❌ Target ID {tid} does not exist in mapping")
+                
 
         success = update_webflow_item(
             webflow_id=webflow_id,
