@@ -1,9 +1,6 @@
-# sync_ops.py
-
 import datetime
-from webflow_utils import create_webflow_item, get_webflow_fields, create_webflow_field
+from webflow_utils import create_webflow_item, get_webflow_fields, create_webflow_field, update_webflow_item
 from main import NOTION_TO_WEBFLOW_LOOKUP
-from webflow_utils import update_webflow_item
 
 def normalize_notion_id(id_str: str) -> str:
     if "-" in id_str:
@@ -23,37 +20,48 @@ def notion_type_to_webflow(notion_type: str) -> str | None:
     }
     return mapping.get(notion_type, None)
 
-def sync_fields_to_webflow(schema: dict, collection_id: str, webflow_headers: dict):
+def sync_fields_to_webflow(schema: dict, collection_id: str, webflow_headers: dict) -> dict:
     existing_fields = get_webflow_fields(collection_id, webflow_headers)
+    slug_map = {}
+
+    displayName_to_slug = {f["displayName"]: f["slug"] for f in existing_fields}
+    displayName_to_type = {f["displayName"]: f["type"] for f in existing_fields}
 
     for field_name, spec in schema.items():
         notion_type = spec["type"]
 
         if notion_type == "title":
-            webflow_field_name = "Name"
+            display_name = "Name"
             webflow_type = "PlainText"
         elif notion_type == "relation":
-            webflow_field_name = field_name
+            display_name = field_name
             webflow_type = "MultiReference"
         else:
-            webflow_field_name = field_name
+            display_name = field_name
             webflow_type = notion_type_to_webflow(notion_type)
 
         if not webflow_type:
             print(f"⚠️  Skipping unsupported field: {field_name} ({notion_type})")
             continue
 
-        if webflow_field_name in existing_fields:
-            current_type = existing_fields[webflow_field_name]
+        # 使用 Webflow 返回的真实 slug
+        slug = displayName_to_slug.get(display_name)
+        if not slug:
+            slug = display_name.lower().replace(" ", "-")
+
+        slug_map[field_name] = slug
+
+        if display_name in displayName_to_type:
+            current_type = displayName_to_type[display_name]
             if current_type != webflow_type:
-                print(f"⚠️  Type mismatch for field '{webflow_field_name}': existing={current_type}, expected={webflow_type}")
+                print(f"⚠️  Type mismatch for field '{display_name}': existing={current_type}, expected={webflow_type}")
             else:
-                print(f"✅ Field '{webflow_field_name}' already exists and matches type")
+                print(f"✅ Field '{display_name}' already exists and matches type")
             continue
 
         payload = {
-            "displayName": webflow_field_name,
-            "slug": webflow_field_name.lower().replace(" ", "-"),
+            "displayName": display_name,
+            "slug": slug,
             "type": webflow_type,
             "required": False
         }
@@ -69,17 +77,18 @@ def sync_fields_to_webflow(schema: dict, collection_id: str, webflow_headers: di
                 "collectionId": target_collection_id
             }
 
-        print(f"➕ Creating Webflow field: {webflow_field_name} ({webflow_type})")
+        print(f"➕ Creating Webflow field: {display_name} ({webflow_type})")
         create_webflow_field(
             collection_id=collection_id,
             webflow_headers=webflow_headers,
             payload=payload
         )
 
-def sync_items_to_webflow(create_list, update_list, delete_list, mapping, schema, collection_id, headers):
+    return slug_map
+
+def sync_items_to_webflow(create_list, update_list, delete_list, mapping, schema, collection_id, headers, slug_map):
     now = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    # Step 1: Create new items with just Name field
     for item in create_list:
         notion_id = item["id"]
         title_property = [v for v in item["properties"].values() if v["type"] == "title"]
@@ -92,10 +101,7 @@ def sync_items_to_webflow(create_list, update_list, delete_list, mapping, schema
             print(f"❌ Skipping create: Notion item {notion_id} has no name")
             continue
 
-        fields = {
-            "name": name
-        }
-
+        fields = { "name": name }
         webflow_id = create_webflow_item(collection_id, fields, headers)
         if webflow_id:
             mapping[notion_id] = {
@@ -106,8 +112,6 @@ def sync_items_to_webflow(create_list, update_list, delete_list, mapping, schema
         else:
             print(f"❌ Failed to create item for Notion ID {notion_id}")
 
-
-    # Step 2: Update existing items
     for item in update_list:
         notion_id = item["id"]
         if notion_id not in mapping:
@@ -118,23 +122,23 @@ def sync_items_to_webflow(create_list, update_list, delete_list, mapping, schema
         field_data = {}
 
         for field_name, spec in schema.items():
-            notion_type = spec["type"]
+            slug = slug_map.get(field_name)
+            if not slug:
+                continue
 
+            notion_type = spec["type"]
             if notion_type in ["title", "rich_text"]:
                 val = item["properties"].get(field_name, {})
                 text_fragments = val.get(notion_type, [])
                 if text_fragments:
-                    field_data[field_name.lower().replace(" ", "-")] = text_fragments[0].get("plain_text", "")
+                    field_data[slug] = text_fragments[0].get("plain_text", "")
 
             elif notion_type == "relation":
                 val = item["properties"].get(field_name, {}).get("relation", [])
                 target_ids = [v["id"] for v in val]
-                wf_ids = []
-                for tid in target_ids:
-                    if tid in mapping and "webflowID" in mapping[tid]:
-                        wf_ids.append(mapping[tid]["webflowID"])
+                wf_ids = [mapping[tid]["webflowID"] for tid in target_ids if tid in mapping and "webflowID" in mapping[tid]]
                 if wf_ids:
-                    field_data[field_name.lower().replace(" ", "-")] = wf_ids if len(wf_ids) > 1 else wf_ids[0]
+                    field_data[slug] = wf_ids if len(wf_ids) > 1 else wf_ids[0]
 
         success = update_webflow_item(
             webflow_id=webflow_id,
@@ -144,6 +148,6 @@ def sync_items_to_webflow(create_list, update_list, delete_list, mapping, schema
         )
 
         if success:
-            mapping[notion_id]["lastSyncedAt"] = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+            mapping[notion_id]["lastSyncedAt"] = now
 
     return mapping

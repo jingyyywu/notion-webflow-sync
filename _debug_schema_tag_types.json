@@ -1,0 +1,51 @@
+{
+  "id": "67fdc83506a0b970529cfe34",
+  "displayName": "Tag Types",
+  "singularName": "Tag Type",
+  "slug": "tag-type",
+  "createdOn": "2025-04-15T02:45:09.437Z",
+  "lastUpdated": "2025-04-15T06:01:42.169Z",
+  "fields": [
+    {
+      "id": "73d8cba6b456eff5e4cf9cd8873b9ea4",
+      "isEditable": true,
+      "isRequired": false,
+      "type": "MultiReference",
+      "slug": "contained-tags-4",
+      "displayName": "Contained Tags",
+      "helpText": null,
+      "validations": {
+        "collectionId": "67fdc82b88d4440b0005dabe"
+      }
+    },
+    {
+      "id": "06c3ba4304c5f3f492e916c76b3a77ad",
+      "isEditable": true,
+      "isRequired": true,
+      "type": "PlainText",
+      "slug": "name",
+      "displayName": "Name",
+      "helpText": null,
+      "validations": {
+        "maxLength": 256
+      }
+    },
+    {
+      "id": "e39ab82271573c96bb3e5d44cb686127",
+      "isEditable": true,
+      "isRequired": true,
+      "type": "PlainText",
+      "slug": "slug",
+      "displayName": "Slug",
+      "helpText": null,
+      "validations": {
+        "maxLength": 256,
+        "pattern": {},
+        "messages": {
+          "pattern": "Must be alphanumerical and not contain any spaces or special characters",
+          "maxLength": "Must be less than 256 characters"
+        }
+      }
+    }
+  ]
+}

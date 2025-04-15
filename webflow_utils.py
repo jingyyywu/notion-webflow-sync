@@ -2,12 +2,12 @@
 
 import httpx
 
-def get_webflow_fields(collection_id: str, headers: dict) -> dict:
+def get_webflow_fields(collection_id: str, headers: dict) -> list:
     url = f"https://api.webflow.com/v2/collections/{collection_id}"
     r = httpx.get(url, headers=headers)
     r.raise_for_status()
-    data = r.json()
-    return {f["displayName"]: f["type"] for f in data.get("fields", [])}
+    return r.json()["fields"]
+
 
 def create_webflow_field(collection_id: str, webflow_headers: dict, payload: dict):
     url = f"https://api.webflow.com/v2/collections/{collection_id}/fields"

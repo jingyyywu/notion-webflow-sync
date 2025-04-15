@@ -1,0 +1,85 @@
+{
+  "id": "67fdc803e92c61467c5c011f",
+  "displayName": "Posts",
+  "singularName": "Post",
+  "slug": "post",
+  "createdOn": "2025-04-15T02:44:19.520Z",
+  "lastUpdated": "2025-04-15T06:01:39.516Z",
+  "fields": [
+    {
+      "id": "ef0a3810c10733967d2421fbce72282d",
+      "isEditable": true,
+      "isRequired": false,
+      "type": "MultiReference",
+      "slug": "sub-item-4",
+      "displayName": "Sub-item",
+      "helpText": null,
+      "validations": {
+        "collectionId": "67fdc803e92c61467c5c011f"
+      }
+    },
+    {
+      "id": "a5b45896415a0191c13c3b5dffb67c7a",
+      "isEditable": true,
+      "isRequired": false,
+      "type": "PlainText",
+      "slug": "post-author-6",
+      "displayName": "Post Author",
+      "helpText": null,
+      "validations": null
+    },
+    {
+      "id": "622152cc63ced647349f9d2c37efa7bb",
+      "isEditable": true,
+      "isRequired": false,
+      "type": "MultiReference",
+      "slug": "tags-4",
+      "displayName": "Tags",
+      "helpText": null,
+      "validations": {
+        "collectionId": "67fdc82b88d4440b0005dabe"
+      }
+    },
+    {
+      "id": "44ec08fd44eeb7d20b601a72fa588b62",
+      "isEditable": true,
+      "isRequired": false,
+      "type": "MultiReference",
+      "slug": "parent-item-4",
+      "displayName": "Parent item",
+      "helpText": null,
+      "validations": {
+        "collectionId": "67fdc803e92c61467c5c011f"
+      }
+    },
+    {
+      "id": "9a7b15f1206507d3395e81c8265ae4c4",
+      "isEditable": true,
+      "isRequired": true,
+      "type": "PlainText",
+      "slug": "name",
+      "displayName": "Name",
+      "helpText": null,
+      "validations": {
+        "maxLength": 256
+      }
+    },
+    {
+      "id": "086a160b0808e76b303ed85dacdbe807",
+      "isEditable": true,
+      "isRequired": true,
+      "type": "PlainText",
+      "slug": "slug",
+      "displayName": "Slug",
+      "helpText": null,
+      "validations": {
+        "maxLength": 256,
+        "pattern": {},
+        "messages": {
+          "pattern": "Must be alphanumerical and not contain any spaces or special characters",
+          "maxLength": "Must be less than 256 characters"
+        }
+      }
+    }
+  ]
+}
