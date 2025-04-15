@@ -25,7 +25,7 @@ def run_full_sync():
         schema, _ = pull_and_save_schema_if_changed(key, notion_db_id, NOTION_TOKEN)
         schema_dict[key] = schema
 
-        slug_map = sync_fields_to_webflow(schema, webflow_collection_id, WEBFLOW_HEADERS)
+        slug_map = sync_fields_to_webflow(schema, webflow_collection_id, WEBFLOW_HEADERS, key)
         slug_map_dict[key] = slug_map
 
     # Phase 2: fetch items and handle CREATE
@@ -49,6 +49,7 @@ def run_full_sync():
 
         # Only run create here
         mapping = sync_items_to_webflow(
+            all_mappings=mapping_dict,
             create_list=create_list,
             update_list=[],
             delete_list=[],
@@ -71,6 +72,7 @@ def run_full_sync():
         update_list = update_dict[key]
 
         mapping = sync_items_to_webflow(
+            all_mappings=mapping_dict,
             create_list=[],
             update_list=update_list,
             delete_list=[],
