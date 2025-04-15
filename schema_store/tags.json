@@ -1,1 +1,13 @@
-{}
+{
+  "Related Post": {
+    "type": "relation",
+    "target": "1d6d4d6c-bd3d-8084-b0be-ece3bef13eb8"
+  },
+  "Tag Type": {
+    "type": "relation",
+    "target": "1d6d4d6c-bd3d-80a0-bd1c-d3e0023e9aea"
+  },
+  "Name": {
+    "type": "title"
+  }
+}

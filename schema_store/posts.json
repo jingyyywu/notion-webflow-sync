@@ -1,1 +1,20 @@
-{}
+{
+  "Sub-item": {
+    "type": "relation",
+    "target": "1d6d4d6c-bd3d-8084-b0be-ece3bef13eb8"
+  },
+  "Post Author": {
+    "type": "rich_text"
+  },
+  "Tags": {
+    "type": "relation",
+    "target": "1d6d4d6c-bd3d-80b8-a509-f5a9b78d8c14"
+  },
+  "Parent item": {
+    "type": "relation",
+    "target": "1d6d4d6c-bd3d-8084-b0be-ece3bef13eb8"
+  },
+  "Name": {
+    "type": "title"
+  }
+}
